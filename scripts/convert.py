@@ -4,6 +4,7 @@ import random
 import json
 import h5py
 import numpy as np
+import copy
 
 # needed to use blenderproc code without starting blender
 os.environ["OUTSIDE_OF_THE_INTERNAL_BLENDER_PYTHON_ENVIRONMENT_BUT_IN_RUN_SCRIPT"] = "1"
@@ -16,17 +17,17 @@ def save_array_as_image(array, key, file_path):
     vis_data(key, array, None, "", save_to_file=file_path)
 
 
-def convert_hdf(base_file_path: str, split: str, json_dict: dict):
+def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
     """ Convert a hdf5 file to images """
-    if not os.path.exists(base_file_path):
-        print(f"The file does not exist: {base_file_path}")
+    if not os.path.exists(hdf5_file_path):
+        print(f"The file does not exist: {hdf5_file_path}")
         return
 
-    if not os.path.isfile(base_file_path):
-        print(f"The path is not a file: {base_file_path}")
+    if not os.path.isfile(hdf5_file_path):
+        print(f"The path is not a file: {hdf5_file_path}")
         return
 
-    base_name = str(os.path.basename(base_file_path)).split('.', maxsplit=1)[0]
+    base_name = str(os.path.basename(hdf5_file_path)).split('.', maxsplit=1)[0]
 
     image_dir = os.path.join(split)
     if not os.path.exists(image_dir):
@@ -34,8 +35,8 @@ def convert_hdf(base_file_path: str, split: str, json_dict: dict):
 
     frame = {}
 
-    with h5py.File(base_file_path, 'r') as data:
-        print(f"{base_file_path}:")
+    with h5py.File(hdf5_file_path, 'r') as data:
+        print(f"{hdf5_file_path}:")
         for key, val in data.items():
             val = np.array(val)
             print(f"key: {key} {val.shape} {val.dtype.name}")
@@ -73,36 +74,26 @@ def convert_hdf(base_file_path: str, split: str, json_dict: dict):
     json_dict["frames"].append(frame)
 
 
-def cli():
-    """
-    Command line function
-    """
-    parser = argparse.ArgumentParser("Script to save images out of a hdf5 files.")
-    parser.add_argument('hdf5', nargs='+', help='Path to hdf5 file/s')
-    parser.add_argument('--trainCount', required=True)
-    parser.add_argument('--valCount', required=True)
-    parser.add_argument('--testCount', required=True)
+def run_split(file_paths: list, split: str, count: int, json_dicts):
+    file_paths = copy.copy(file_paths)
+    random.shuffle(file_paths)
 
-    args = parser.parse_args()
+    for file in file_paths:
+        convert_hdf(file, split, json_dicts[split])
+    assert len(json_dicts[split]["frames"]) == count
 
-    train_count = int(args.trainCount)
+
+def run_convert(file_paths: list, train_count: int, val_count: int, test_count: int):
     print("train_count", train_count)
-    val_count = int(args.valCount)
     print("val_count", val_count)
-    test_count = int(args.testCount)
     print("test_count", test_count)
     total_count = train_count + val_count + test_count
     print("total_count", total_count)
 
-    file_paths = args.hdf5
-
-    if isinstance(file_paths, str):
-        file_paths = [file_paths]
-    assert isinstance(file_paths, list)
-    random.shuffle(file_paths)
-
     if len(file_paths) != total_count:
         raise RuntimeError(f"Counts do not match: {len(file_paths)} {total_count}")
+
+    file_paths.sort()
 
     splits = ["train"]
     if val_count > 0:
@@ -117,24 +108,14 @@ def cli():
         for split in splits
     }
 
-    for file in file_paths[:train_count]:
-        convert_hdf(file, "train", json_dicts["train"])
-    assert len(json_dicts["train"]["frames"]) == train_count
+    run_split(file_paths[:train_count], "train", train_count, json_dicts)
 
     if "val" in splits:
-        for file in file_paths[train_count:train_count + val_count]:
-            convert_hdf(file, "val", json_dicts["val"])
-        assert len(json_dicts["val"]["frames"]) == val_count
+        run_split(file_paths[train_count:train_count + val_count], "val", val_count, json_dicts)
 
     if "test" in splits:
-        for file in file_paths[train_count + val_count:]:
-            convert_hdf(file, "test", json_dicts["test"])
-        assert len(json_dicts["test"]["frames"]) == test_count
+        run_split(file_paths[train_count + val_count:], "test", test_count, json_dicts)
 
     for split in splits:
         with open(f'transforms_{split}.json', 'w', encoding='utf-8') as out_file:
             json.dump(json_dicts[split], out_file, ensure_ascii=False, indent=4)
-
-
-if __name__ == "__main__":
-    cli()

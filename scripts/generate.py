@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import os
 import bpy
+from hashlib import sha256
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--outputDir', required=True)
@@ -67,6 +68,12 @@ if not distractors_enabled:
 bproc.camera.set_intrinsics_from_blender_params(1, 512, 512, lens_unit="FOV")
 
 cam2world_matrixs = []
+
+a = scene_name
+if isinstance(a, str):
+    a = a.encode()
+a = int.from_bytes(a + sha256(a).digest(), 'big')
+np.random.seed(a % 2 ** 32)
 
 image_count = int(args.count)
 

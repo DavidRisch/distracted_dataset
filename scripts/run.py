@@ -3,6 +3,9 @@ import subprocess
 import os
 import argparse
 import glob
+import random
+from convert import run_convert
+from hashlib import sha256
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sceneName', required=True)
@@ -66,16 +69,19 @@ for scene_name in scene_names:
         return_code = subprocess.call(process_args)
         assert return_code == 0
 
-        process_args = [
-            "python3", os.path.join(repo_root, "scripts", "convert.py"),
-            "--trainCount", str(train_count),
-            "--valCount", str(val_count),
-            "--testCount", str(test_count),
-        ]
-        for file_name in glob.glob(raw_dir + "/*.hdf5"):
-            process_args.append(file_name)
-        return_code = subprocess.call(process_args, cwd=scene_dir)
-        assert return_code == 0
+        a = scene_name
+        if isinstance(a, str):
+            a = a.encode()
+        a = int.from_bytes(a + sha256(a).digest(), 'big')
+        random.seed(a)
+
+        os.chdir(scene_dir)
+        run_convert(
+            file_paths=glob.glob(raw_dir + "/*.hdf5"),
+            train_count=train_count,
+            val_count=val_count,
+            test_count=test_count,
+        )
 
     if "distracted" in kinds and "clean" in kinds:
         scene_dir_distracted = os.path.join(dataset_dir, scene_name, "distracted")
