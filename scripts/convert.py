@@ -93,7 +93,8 @@ def run_convert(file_paths: list, train_count: int, val_count: int, test_count: 
     if len(file_paths) != total_count:
         raise RuntimeError(f"Counts do not match: {len(file_paths)} {total_count}")
 
-    file_paths.sort()
+    file_paths.sort(key=lambda x: int(x.split("/")[-1].split(".")[0]))
+    print("sorted file_paths: ", file_paths)
 
     splits = ["train"]
     if val_count > 0:

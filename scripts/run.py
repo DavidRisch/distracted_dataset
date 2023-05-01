@@ -5,7 +5,9 @@ import argparse
 import glob
 import random
 from convert import run_convert
+from generate_mask import run_generate_mask
 from hashlib import sha256
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sceneName', required=True)
@@ -87,7 +89,21 @@ for scene_name in scene_names:
         scene_dir_distracted = os.path.join(dataset_dir, scene_name, "distracted")
         scene_dir_clean = os.path.join(dataset_dir, scene_name, "clean")
         for split in ["val", "test"]:
-            shutil.copytree(os.path.join(scene_dir_clean, split), os.path.join(scene_dir_distracted, split))
+            shutil.copytree(os.path.join(scene_dir_clean, split), os.path.join(scene_dir_distracted, split),
+                            dirs_exist_ok=True)
             json_file_name = f'transforms_{split}.json'
             shutil.copy(os.path.join(scene_dir_clean, json_file_name),
                         os.path.join(scene_dir_distracted, json_file_name))
+
+        distracted_images_paths = []
+        distracted_train_dir = os.path.join(dataset_dir, scene_name, "distracted", "train")
+        for root, dirs, files in os.walk(distracted_train_dir):
+            for file_name in files:
+                if re.match("^[0-9]+\.png", file_name):
+                    distracted_images_paths.append(os.path.join(distracted_train_dir, file_name))
+
+        run_generate_mask(
+            distracted_images_paths=distracted_images_paths,
+            clean_dir=os.path.join(dataset_dir, scene_name, "clean", "train"),
+            distracted_dir=distracted_train_dir,
+        )
