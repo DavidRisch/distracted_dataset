@@ -65,6 +65,17 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
                     else:
                         file_path = base_path + f'_other_{key}.png'
                     save_array_as_image(val, key, file_path)
+
+                    if key == "depth":
+                        file_path = base_path + '_depth.npy'
+                        # 10000000000.0 seems to mean that the is nothing at this pixel -> infinite depth
+                        val[val == 10000000000.0] = np.inf
+                        with open(file_path, 'wb') as out_file:
+                            np.save(out_file, val)
+                    elif key == "normals":
+                        file_path = base_path + '_normal.npy'
+                        with open(file_path, 'wb') as out_file:
+                            np.save(out_file, val)
                 else:
                     # stereo image
                     for image_index, image_value in enumerate(val):
