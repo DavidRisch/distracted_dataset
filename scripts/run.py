@@ -77,9 +77,13 @@ for scene_name in scene_names:
         a = int.from_bytes(a + sha256(a).digest(), 'big')
         random.seed(a)
 
+        file_paths = glob.glob(raw_dir + "/*.hdf5")
+        if quick_mode:
+            file_paths = file_paths[:total_count]
+
         os.chdir(scene_dir)
         run_convert(
-            file_paths=glob.glob(raw_dir + "/*.hdf5"),
+            file_paths=file_paths,
             train_count=train_count,
             val_count=val_count,
             test_count=test_count,
