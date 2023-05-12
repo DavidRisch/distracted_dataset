@@ -95,7 +95,7 @@ for scene_name in scene_names:
         for split in ["val", "test"]:
             shutil.copytree(os.path.join(scene_dir_clean, split), os.path.join(scene_dir_distracted, split),
                             dirs_exist_ok=True)
-            json_file_name = f'transforms_{split}.json'
+            json_file_name = f'meta_data_{split}.json'
             shutil.copy(os.path.join(scene_dir_clean, json_file_name),
                         os.path.join(scene_dir_distracted, json_file_name))
 
