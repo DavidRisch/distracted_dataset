@@ -35,23 +35,20 @@ bproc.init()
 loaded_objects = bproc.loader.load_blend(scene_blend_file, obj_types=["mesh", "light"])
 
 if scene_name == "suzanne":
-    plane = bproc.filter.one_by_attr(loaded_objects, "name", "Plane")
-    plane.set_cp("category_id", 1)
-
     target_object_name = "Suzanne"
 elif scene_name == "sphere":
-    plane = bproc.filter.one_by_attr(loaded_objects, "name", "Background")
-    plane.set_cp("category_id", 1)
-
     world = bpy.data.worlds['World']
     world.use_nodes = True
     bg = world.node_tree.nodes['Background']
     bg.inputs[0].default_value[:3] = (0.05, 0.05, 0.05)
-    bg.inputs[1].default_value = 10.0
+    bg.inputs[1].default_value = 7.0
 
     target_object_name = "Sphere"
 else:
     raise RuntimeError("unknown scene_name: " + scene_name)
+
+plane = bproc.filter.one_by_attr(loaded_objects, "name", "Plane")
+plane.set_cp("category_id", 1)
 
 target_object: bproc.types.Struct = bproc.filter.one_by_attr(loaded_objects, "name", target_object_name)
 target_object: bproc.types.MeshObject
@@ -83,9 +80,6 @@ image_count = int(args.count)
 for i in range(image_count):
     part_sphere_dir_vector = np.array([0, 0, 1])
     dist_above_center = 0.5
-    if scene_name == "sphere":
-        part_sphere_dir_vector = np.array([1, 0, 0])
-        dist_above_center = 1.5
 
     location = bproc.sampler.part_sphere(center=np.array([0, 0, 0]), mode="SURFACE", radius=2,
                                          part_sphere_dir_vector=part_sphere_dir_vector, dist_above_center=dist_above_center)
