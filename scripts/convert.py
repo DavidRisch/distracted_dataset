@@ -71,25 +71,58 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
                         json_dict["height"] = val.shape[0]
 
                     elif key == "depth":
-                        file_path = base_path + '_depth_gt.png'
-                        frame["mono_depth_path"] = file_path
+                        file_path = base_path + '_depth_gt_vis.png'
                     elif key == "normals":
-                        file_path = base_path + '_normal_gt.png'
-                        frame["mono_normal_path"] = file_path
+                        file_path = base_path + '_normal_gt_sensable_format_vis.png'
                     else:
-                        file_path = base_path + f'_other_{key}.png'
+                        file_path = base_path + f'_other_{key}_vis.png'
 
                     save_array_as_image(val, key, file_path)
 
                     if key == "depth":
-                        file_path = base_path + '_depth_gt.npy'
+                        file_path = base_path + '_depth_gt_sensable_format.npy'
                         # 10000000000.0 seems to mean that the is nothing at this pixel -> infinite depth
                         val[val == 10000000000.0] = np.inf
-                        val *= 1000  # convert from meters to mm
+                        print("depth_sensable_format", val.shape, np.min(val), np.max(val))
+                        with open(file_path, 'wb') as out_file:
+                            np.save(out_file, val)
+
+                        file_path = base_path + '_depth_gt.npy'
+                        frame["mono_depth_path"] = file_path
+
+                        # needed to undo weird conversion in sdfstudio
+                        val -= 0.5
+                        val /= 50.0
+
+                        # sdfstudio ignores depth pixels if they have a value of 0
+                        val[np.isinf(val)] = 0
+
+                        print("depth", val.shape, np.min(val), np.max(val))
+
                         with open(file_path, 'wb') as out_file:
                             np.save(out_file, val)
                     elif key == "normals":
+                        file_path = base_path + '_normal_gt_sensable_format.npy'
+                        with open(file_path, 'wb') as out_file:
+                            np.save(out_file, val)
+
+                        # val is in OpenGL convention
+                        val[:, :, 1] = 1 - val[:, :, 1]
+                        val[:, :, 2] = 1 - val[:, :, 2]
+                        # 0 = X = right
+                        # 1 = Y = down
+                        # 2 = Z = into image
+
+                        png_file_path = base_path + '_normal_gt_vis.png'
+                        save_array_as_image(val, key, png_file_path)
+
                         file_path = base_path + '_normal_gt.npy'
+                        frame["mono_normal_path"] = file_path
+
+                        val = np.array([
+                            val[:, :, i] for i in range(3)
+                        ])
+
                         with open(file_path, 'wb') as out_file:
                             np.save(out_file, val)
                     elif key == "category_id_segmaps":
@@ -99,6 +132,7 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
 
                         foreground_mask = np.zeros_like(val, dtype=np.uint8)
                         foreground_mask[val == 2] = 255
+                        foreground_mask = cv2.cvtColor(foreground_mask, cv2.COLOR_GRAY2RGB)
                         cv2.imwrite(file_path, foreground_mask)
                 else:
                     # stereo image
@@ -150,8 +184,8 @@ def run_convert(file_paths: list, train_count: int, val_count: int, test_count: 
             ],
             'scene_box': {
                 'aabb': [
-                    [-3, -3, -3],  # aabb for the bbox
-                    [3, 3, 3],
+                    [-1, -1, -1],  # aabb for the bbox
+                    [1, 1, 1],
                 ],
                 'near': 0.5,  # near plane for each image
                 'far': 10.0,  # far plane for each image
