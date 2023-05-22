@@ -103,7 +103,7 @@ for scene_name in scene_names:
         distracted_train_dir = os.path.join(dataset_dir, scene_name, "distracted", "train")
         for root, dirs, files in os.walk(distracted_train_dir):
             for file_name in files:
-                if re.match("^[0-9]+\.png", file_name):
+                if re.match("^[0-9]+_rgb\.png", file_name):
                     distracted_images_paths.append(os.path.join(distracted_train_dir, file_name))
 
         run_generate_mask(
