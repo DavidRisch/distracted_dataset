@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--outputDir', required=True)
 parser.add_argument('--sceneName', required=True)
 parser.add_argument('--kind', required=True)
+parser.add_argument('--resolution', required=True)
 parser.add_argument('--count', required=True)
 args = parser.parse_args()
 
@@ -65,7 +66,11 @@ aabb.delete()
 if not distractors_enabled:
     distractor.delete()
 
-bproc.camera.set_intrinsics_from_blender_params(1, 128, 128, lens_unit="FOV")
+resolution = args.resolution
+resolution = int(resolution)
+print(f"{resolution=}")
+
+bproc.camera.set_intrinsics_from_blender_params(1, resolution, resolution, lens_unit="FOV")
 
 cam2world_matrixs = []
 
