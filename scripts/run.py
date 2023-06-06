@@ -110,15 +110,20 @@ for scene_name in scene_names:
                 shutil.copy(os.path.join(scene_dir_clean, json_file_name),
                             os.path.join(scene_dir_distracted, json_file_name))
 
-            distracted_images_paths = []
-            distracted_train_dir = os.path.join(dataset_dir, scene_name, resolution_str, "distracted", "train")
-            for root, dirs, files in os.walk(distracted_train_dir):
-                for file_name in files:
-                    if re.match("^[0-9]+_rgb\.png", file_name):
-                        distracted_images_paths.append(os.path.join(distracted_train_dir, file_name))
+            for image_type in ("rgb", "depth_gt", "normal_gt"):
+                image_extension = "png" if image_type == "rgb" else "npy"
+                threshold = 1 if image_type == "rgb" else 0.01
 
-            run_generate_mask(
-                distracted_images_paths=distracted_images_paths,
-                clean_dir=os.path.join(dataset_dir, scene_name, resolution_str, "clean", "train"),
-                distracted_dir=distracted_train_dir,
-            )
+                distracted_images_paths = []
+                distracted_train_dir = os.path.join(dataset_dir, scene_name, resolution_str, "distracted", "train")
+                for root, dirs, files in os.walk(distracted_train_dir):
+                    for file_name in files:
+                        if re.match("^[0-9]+_" + image_type + "\." + image_extension, file_name):
+                            distracted_images_paths.append(os.path.join(distracted_train_dir, file_name))
+
+                run_generate_mask(
+                    distracted_images_paths=distracted_images_paths,
+                    clean_dir=os.path.join(dataset_dir, scene_name, resolution_str, "clean", "train"),
+                    distracted_dir=distracted_train_dir,
+                    threshold=threshold,
+                )
