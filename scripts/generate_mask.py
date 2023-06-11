@@ -34,6 +34,12 @@ def run_image_pair(path_clean: str, path_distracted: str, output_path: str, thre
     distracted = load_image(path_distracted)
     assert distracted is not None
 
+    # prevent underflows
+    if clean.dtype == np.uint8:
+        clean = clean.astype(np.long)
+    if distracted.dtype == np.uint8:
+        distracted = distracted.astype(np.long)
+
     difference = np.abs(clean - distracted)
     if len(difference.shape) == 3:
         difference_mono = (1 / 3) * (difference[:, :, 0] + difference[:, :, 1] + difference[:, :, 2])

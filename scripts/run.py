@@ -112,7 +112,7 @@ for scene_name in scene_names:
 
             for image_type in ("rgb", "depth_gt", "normal_gt"):
                 image_extension = "png" if image_type == "rgb" else "npy"
-                threshold = 1 if image_type == "rgb" else 0.01
+                threshold = 2 if image_type == "rgb" else 0.02
 
                 distracted_images_paths = []
                 distracted_train_dir = os.path.join(dataset_dir, scene_name, resolution_str, "distracted", "train")
