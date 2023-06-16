@@ -13,7 +13,7 @@ def load_image(path: str):
         image = cv2.imread(path)
     elif path.endswith(".npy"):
         image = np.load(path)
-        image = image.astype(np.float)
+        image = image.astype(np.single)
     else:
         assert False, path
 
@@ -36,9 +36,9 @@ def run_image_pair(path_clean: str, path_distracted: str, output_path: str, thre
 
     # prevent underflows
     if clean.dtype == np.uint8:
-        clean = clean.astype(np.long)
+        clean = clean.astype(np.int_)
     if distracted.dtype == np.uint8:
-        distracted = distracted.astype(np.long)
+        distracted = distracted.astype(np.int_)
 
     difference = np.abs(clean - distracted)
     if len(difference.shape) == 3:
