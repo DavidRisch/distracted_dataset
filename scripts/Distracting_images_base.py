@@ -65,8 +65,8 @@ def main():
     parser.add_argument('--output_image_path', dest='output_image_path', help="Path where distracted images should be saved", required=True)
     parser.add_argument('--distractor_images_path', dest='distractor_images_path', help="Path of distractor object images", required=True)
     parser.add_argument('--save_as_png_and_npy', dest='save_as_png_and_npy', help="Select True if you also want to get npy files as output", default=False)
-
     args = parser.parse_args()
+    
     input_path = Path(args.input_image_path)
     output_path = Path(args.output_image_path)
     distractor_path = Path(args.distractor_images_path)
