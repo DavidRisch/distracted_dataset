@@ -6,21 +6,6 @@ import argparse
 import random
 import shutil
 
-parser = argparse.ArgumentParser(description='Create distracted dataset of different scenes')
-
-parser.add_argument('--distraction_percentage', dest='distraction_percentage', help="distraction percentage of input images between 0 and 1", required=True)
-
-parser.add_argument('--input_image_path', dest='input_image_path', help="Path to input images that should be distracted", required=True)
-
-parser.add_argument('--output_image_path', dest='output_image_path', help="Path where distracted images should be saved", required=True)
-
-parser.add_argument('--distractor_images_path', dest='distractor_images_path', help="Path of distractor object images", required=True)
-
-parser.add_argument('--save_as_png_and_npy', dest='save_as_png_and_npy', help="Select True if you also want to get npy files as output", default=False)
-
-args = parser.parse_args()
-
-
 def distracting_saving_images(input_path, output_path, distract_imagename, distraction_percentage, npy_save):
     distractor_amounts = len(distract_imagename)
     for filename in input_path.glob('*.png'):
@@ -74,6 +59,14 @@ def input_checker(input_path, output_path, distractor_path):
             raise ValueError("No distractor images in given path")
 
 def main():
+    parser = argparse.ArgumentParser(description='Create distracted dataset of different scenes')
+    parser.add_argument('--distraction_percentage', dest='distraction_percentage', help="distraction percentage of input images between 0 and 1", required=True)
+    parser.add_argument('--input_image_path', dest='input_image_path', help="Path to input images that should be distracted", required=True)
+    parser.add_argument('--output_image_path', dest='output_image_path', help="Path where distracted images should be saved", required=True)
+    parser.add_argument('--distractor_images_path', dest='distractor_images_path', help="Path of distractor object images", required=True)
+    parser.add_argument('--save_as_png_and_npy', dest='save_as_png_and_npy', help="Select True if you also want to get npy files as output", default=False)
+
+    args = parser.parse_args()
     input_path = Path(args.input_image_path)
     output_path = Path(args.output_image_path)
     distractor_path = Path(args.distractor_images_path)
