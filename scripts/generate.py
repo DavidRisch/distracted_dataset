@@ -86,10 +86,6 @@ for i in range(image_count):
     part_sphere_dir_vector = np.array([0, 0, 1])
     dist_above_center = 0.5
 
-    if scene_name == "suzanne":
-        part_sphere_dir_vector = np.array([0, -1, 1])
-        dist_above_center = 1.75
-
     location = bproc.sampler.part_sphere(center=np.array([0, 0, 0]), mode="SURFACE", radius=2,
                                          part_sphere_dir_vector=part_sphere_dir_vector, dist_above_center=dist_above_center)
     print("camera location", location)

@@ -56,7 +56,7 @@ for scene_name in scene_names:
             scene_dir = os.path.join(dataset_dir, scene_name, resolution_str, kind)
             os.makedirs(scene_dir, exist_ok=True)
 
-            train_count = 40
+            train_count = 80
             val_count = 10
             test_count = 10
 
@@ -112,7 +112,7 @@ for scene_name in scene_names:
 
             for image_type in ("rgb", "depth_gt", "normal_gt"):
                 image_extension = "png" if image_type == "rgb" else "npy"
-                threshold = 2 if image_type == "rgb" else 0.02
+                threshold = 3 if image_type == "rgb" else 0.02
 
                 distracted_images_paths = []
                 distracted_train_dir = os.path.join(dataset_dir, scene_name, resolution_str, "distracted", "train")
