@@ -36,6 +36,12 @@ bproc.init()
 loaded_objects = bproc.loader.load_blend(scene_blend_file, obj_types=["mesh", "light"])
 
 if scene_name == "suzanne":
+    world = bpy.data.worlds['World']
+    world.use_nodes = True
+    bg = world.node_tree.nodes['Background']
+    bg.inputs[0].default_value[:3] = (0.05, 0.05, 0.05)
+    bg.inputs[1].default_value = 3.0
+
     target_object_name = "Suzanne"
 elif scene_name == "sphere":
     world = bpy.data.worlds['World']
@@ -84,10 +90,11 @@ image_count = int(args.count)
 
 for i in range(image_count):
     part_sphere_dir_vector = np.array([0, 0, 1])
-    dist_above_center = 0.5
+    dist_above_center = -2
 
-    location = bproc.sampler.part_sphere(center=np.array([0, 0, 0]), mode="SURFACE", radius=2,
-                                         part_sphere_dir_vector=part_sphere_dir_vector, dist_above_center=dist_above_center)
+    location = bproc.sampler.part_sphere(center=np.array([0, 0, 0]), mode="SURFACE", radius=2.75,
+                                         part_sphere_dir_vector=part_sphere_dir_vector,
+                                         dist_above_center=dist_above_center)
     print("camera location", location)
 
     rotation_matrix = bproc.camera.rotation_from_forward_vec(target_object.get_location() - location)
