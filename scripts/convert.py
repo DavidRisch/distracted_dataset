@@ -41,8 +41,20 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
 
     frame = {}
 
+    base_path = os.path.join(image_dir, f'{base_name}')
+
     with h5py.File(hdf5_file_path, 'r') as data:
         print(f"{hdf5_file_path}:")
+        # 10000000000.0 seems to mean that the is nothing at this pixel -> infinite depth -> not part of the alpha mask
+        background_mask = (np.array(data["depth"]) == 10000000000.0)
+        # background_mask is True for all pixels which are not part of any object (the floor is *not* background)
+
+        background_mask_image_path = base_path + '_background_mask.png'
+        background_mask_image = np.zeros_like(background_mask, dtype=np.uint8)
+        background_mask_image[background_mask] = 255
+        background_mask_image = cv2.cvtColor(background_mask_image, cv2.COLOR_GRAY2RGB)
+        cv2.imwrite(background_mask_image_path, background_mask_image)
+
         for key, val in data.items():
             val = np.array(val)
             print(f"key: {key} {val.shape} {val.dtype.name}")
@@ -51,7 +63,7 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
             elif key == "cam2world_matrix":
                 frame["camtoworld_sensable_format"] = val.tolist()
                 print("camtoworld_sensable_format:", frame["camtoworld_sensable_format"])
-                val[0:3, 1:3] *= -1 # needed because the 'sdfstudio-data' loader does some wierd conversion
+                val[0:3, 1:3] *= -1  # needed because the 'sdfstudio-data' loader does some wierd conversion
                 frame["camtoworld"] = val.tolist()
                 print("camtoworld:", frame["camtoworld"])
             elif key == "camera_K":
@@ -62,13 +74,17 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
             else:
                 if val.shape[0] != 2:
                     # mono image
-                    base_path = os.path.join(image_dir, f'{base_name}')
+
                     if key == "colors":
                         file_path = base_path + '_rgb.png'
                         frame["rgb_path"] = file_path
 
-                        json_dict["width"] = val.shape[0]
+                        json_dict["width"] = val.shape[1]
                         json_dict["height"] = val.shape[0]
+
+                        val = cv2.cvtColor(val, cv2.COLOR_RGB2BGRA)
+
+                        val[background_mask] = 0  # background should be transparent
 
                     elif key == "depth":
                         file_path = base_path + '_depth_gt_vis.png'
@@ -77,7 +93,10 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
                     else:
                         file_path = base_path + f'_other_{key}_vis.png'
 
-                    save_array_as_image(val, key, file_path)
+                    if len(val.shape) == 3 and val.shape[2] == 4:
+                        cv2.imwrite(file_path, val)
+                    else:
+                        save_array_as_image(val, key, file_path)
 
                     if key == "depth":
                         file_path = base_path + '_depth_gt_sensable_format.npy'
@@ -135,10 +154,7 @@ def convert_hdf(hdf5_file_path: str, split: str, json_dict: dict):
                         foreground_mask = cv2.cvtColor(foreground_mask, cv2.COLOR_GRAY2RGB)
                         cv2.imwrite(file_path, foreground_mask)
                 else:
-                    # stereo image
-                    for image_index, image_value in enumerate(val):
-                        file_path = f'{base_name}_{key}_{image_index}.png'
-                        save_array_as_image(image_value, key, file_path)
+                    assert False # stereo image, not supported
 
     json_dict["frames"].append(frame)
 
