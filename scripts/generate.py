@@ -57,6 +57,9 @@ else:
 plane = bproc.filter.one_by_attr(loaded_objects, "name", "Plane")
 plane.set_cp("category_id", 1)
 
+outside_walls = bproc.filter.one_by_attr(loaded_objects, "name", "OutsideWalls")
+outside_walls.set_cp("category_id", 0)
+
 target_object: bproc.types.Struct = bproc.filter.one_by_attr(loaded_objects, "name", target_object_name)
 target_object: bproc.types.MeshObject
 target_object.set_cp("category_id", 2)
